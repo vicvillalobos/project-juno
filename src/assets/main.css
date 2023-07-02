@@ -1,0 +1,52 @@
+:root,
+html.dark {
+  --app-color-background: #1d1f22;
+  --app-color-background-dark: #18191c;
+  --app-color-background-darker: #0c0d0f;
+  --app-color-background-card: #24292e;
+
+  --el-color-primary: #ff8640;
+  --el-color-primary-light-3: #c95f22;
+  --el-color-primary-light-5: #9b4716;
+  --el-color-primary-light-7: #7a350d;
+  --el-color-primary-light-8: #572306;
+  --el-color-primary-light-9: #331302;
+  --el-color-primary-dark-2: #ffa366;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+div#windowFrame {
+  box-sizing: border-box;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: var(--app-color-background-dark);
+}
+
+.card {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  background-color: var(--app-color-background-card);
+  border-radius: 8px;
+  box-shadow: 0px 2px 5px 0 rgba(0, 0, 0, 0.2);
+  padding: 1em;
+}
+
+.el-row.vertical-spacing {
+  margin-bottom: 1em;
+}
