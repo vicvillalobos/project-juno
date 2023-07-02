@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { reactive, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { IBalanceMovement } from '../models/interfaces/balance'
 import { groupMovementsByDate } from '@/utils/data'

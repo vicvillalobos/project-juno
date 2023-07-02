@@ -46,7 +46,6 @@ const handleClick = (tab: any, event: any) => {
   <main>
     <el-row class="vertical-spacing" :gutter="20">
       <el-col>
-        <CardChart />
       </el-col>
     </el-row>
     <el-row :gutter="20">

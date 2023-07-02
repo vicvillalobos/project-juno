@@ -1,4 +1,4 @@
-export enum ITransactionType {
+export enum ETransactionType {
     Income = 1000,
     Salary = 1001,
     Gift = 1002,
@@ -14,7 +14,7 @@ export enum ITransactionType {
     Bills = 2008
 }
 
-export enum IAgentType {
+export enum EAgentType {
     Bank = 1,
     CreditCard = 2,
     Streaming = 3,
@@ -27,7 +27,7 @@ export enum IAgentType {
     Other = 10
 }
 
-export enum IAccountingDueType {
+export enum EAccountingDueType {
     SameDayOfWeek,
     SameDayOfMonth,
     FirstLaborDayOfMonth,
@@ -39,13 +39,14 @@ export enum IAccountingDueType {
 export interface IAccountingAccount {
     id: string;
     name: string;
+    transactionLogs: IAccountingTransactionLog[];
 }
 
 export interface IAccountingAgent {
     id: string;
     name: string;
     imageUrl?: string;
-    type: IAgentType;
+    type: EAgentType;
 }
 
 export interface IAccountingSubscription {
@@ -54,7 +55,7 @@ export interface IAccountingSubscription {
     account: IAccountingAccount;
     agent: IAccountingAgent;
     dueDate: Date;
-    dueType: IAccountingDueType;
+    dueType: EAccountingDueType;
     lastPaymentDate?: Date;
 }
 
@@ -64,7 +65,7 @@ export interface IAccountingTransactionLog {
     date: Date;
     account: IAccountingAccount;
     amount: number;
-    type: ITransactionType;
+    type: ETransactionType;
     agent: IAccountingAgent;
     subscription?: IAccountingSubscription;
 }
@@ -73,14 +74,13 @@ export interface IAccountingData {
     accounts: IAccountingAccount[];
     agents: IAccountingAgent[];
     subscriptions: IAccountingSubscription[];
-    transactionLogs: IAccountingTransactionLog[];
 }
 
 export interface ITransactionLogQuery {
     account?: IAccountingAccount;
     agent?: IAccountingAgent;
     subscription?: IAccountingSubscription;
-    type?: ITransactionType;
+    type?: ETransactionType;
     dateFrom?: Date;
     dateTo?: Date;
 }

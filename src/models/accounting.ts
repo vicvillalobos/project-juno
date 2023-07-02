@@ -1,6 +1,6 @@
 import type {
-    IAccountingAccount, IAccountingAgent, IAgentType, IAccountingDueType,
-    IAccountingSubscription, IAccountingTransactionLog, ITransactionType, IAccountingData, ITransactionLogQuery
+    IAccountingAccount, IAccountingAgent, EAgentType, EAccountingDueType,
+    IAccountingSubscription, IAccountingTransactionLog, ETransactionType as ETransactionType, IAccountingData, ITransactionLogQuery
 } from "./interfaces/accounting";
 
 abstract class Exportable {
@@ -12,16 +12,98 @@ export class Account extends Exportable {
     id: string;
     name: string;
 
+    transactionLogs: TransactionLog[];
+
     constructor(id: string, name: string) {
         super();
         this.id = id;
         this.name = name;
+        this.transactionLogs = [];
+    }
+
+    get TransactionLogs(): TransactionLog[] {
+        return this.transactionLogs;
+    }
+
+    addTransactionLog(transactionLog: TransactionLog): void {
+        this.transactionLogs.push(transactionLog);
+    }
+
+    getTransactionLogById(id: string): TransactionLog {
+        return this.transactionLogs.find(transactionLog => transactionLog.id === id) as TransactionLog;
+    }
+    removeTransactionLog(transactionLog: TransactionLog): void {
+        this.transactionLogs = this.transactionLogs.filter(tl => tl.id !== transactionLog.id);
+    }
+
+    QueryTransactionLogs(query: ITransactionLogQuery): TransactionLog[] {
+
+        let transactionLogs = this.transactionLogs;
+
+        if (query.account !== undefined) {
+            transactionLogs = transactionLogs.filter(transactionLog => {
+                if (query.account === undefined) return false;
+                return transactionLog.account.id === query.account.id;
+            });
+        }
+
+        if (query.agent !== undefined) {
+            transactionLogs = transactionLogs.filter(transactionLog => {
+                if (query.agent === undefined) return false;
+                return transactionLog.agent.id === query.agent.id;
+            });
+        }
+
+        if (query.subscription !== undefined) {
+            transactionLogs = transactionLogs.filter(transactionLog => {
+                if (query.subscription === undefined) return false;
+                return transactionLog.subscription?.id === query.subscription.id;
+            });
+        }
+
+        if (query.type !== undefined) {
+            transactionLogs = transactionLogs.filter(transactionLog => {
+                if (query.type === undefined) return false;
+                return transactionLog.type === query.type;
+            });
+        }
+
+        if (query.dateFrom !== undefined) {
+            transactionLogs = transactionLogs.filter(transactionLog => {
+                if (query.dateFrom === undefined) return false;
+                return transactionLog.date >= query.dateFrom;
+            });
+        }
+
+        if (query.dateTo !== undefined) {
+            transactionLogs = transactionLogs.filter(transactionLog => {
+                if (query.dateTo === undefined) return false;
+                return transactionLog.date <= query.dateTo;
+            });
+        }
+
+        return transactionLogs;
+
+    }
+
+    GetBalance(query?: ITransactionLogQuery): number {
+        if (query === undefined) query = {};
+
+        let transactionLogs = this.QueryTransactionLogs(query);
+
+        let balance = 0;
+        transactionLogs.forEach(transactionLog => {
+            balance += transactionLog.amount;
+        });
+
+        return balance;
     }
 
     export(): IAccountingAccount {
         return {
             id: this.id,
-            name: this.name
+            name: this.name,
+            transactionLogs: this.transactionLogs.map(transactionLog => transactionLog.export())
         };
     }
 
@@ -32,9 +114,9 @@ export class Agent extends Exportable {
     id: string;
     name: string;
     imageUrl?: string;
-    type: IAgentType;
+    type: EAgentType;
 
-    constructor(id: string, name: string, type: IAgentType, imageUrl?: string) {
+    constructor(id: string, name: string, type: EAgentType, imageUrl?: string) {
         super();
         this.id = id;
         this.name = name;
@@ -60,10 +142,10 @@ export class Subscription extends Exportable {
     account: Account;
     agent: Agent;
     dueDate: Date;
-    dueType: IAccountingDueType;
+    dueType: EAccountingDueType;
     lastPaymentDate?: Date;
 
-    constructor(id: string, name: string, account: Account, agent: Agent, dueDate: Date, dueType: IAccountingDueType, lastPaymentDate?: Date) {
+    constructor(id: string, name: string, account: Account, agent: Agent, dueDate: Date, dueType: EAccountingDueType, lastPaymentDate?: Date) {
         super();
         this.id = id;
         this.name = name;
@@ -95,11 +177,12 @@ export class TransactionLog extends Exportable {
     date: Date;
     account: Account;
     amount: number;
-    type: ITransactionType;
+    balance: number; // balance of the account after transaction.
+    type: ETransactionType;
     agent: Agent;
     subscription?: Subscription;
 
-    constructor(id: string, description: string | undefined, date: Date, account: Account, amount: number, type: ITransactionType, agent: Agent, subscription?: Subscription) {
+    constructor(id: string, description: string | undefined, date: Date, account: Account, amount: number, type: ETransactionType, agent: Agent, subscription?: Subscription) {
         super();
         this.id = id;
         this.description = description;
@@ -109,6 +192,7 @@ export class TransactionLog extends Exportable {
         this.type = type;
         this.agent = agent;
         this.subscription = subscription;
+        this.balance = account.GetBalance() + amount;
     }
 
     export(): IAccountingTransactionLog {
@@ -189,10 +273,6 @@ export class AccountingDatabase {
         return this.subscriptions.find(subscription => subscription.id === id) as Subscription;
     }
 
-    getTransactionLogById(id: string): TransactionLog {
-        return this.transactionLogs.find(transactionLog => transactionLog.id === id) as TransactionLog;
-    }
-
     addAccount(account: Account): void {
         this.accounts.push(account);
     }
@@ -221,10 +301,6 @@ export class AccountingDatabase {
         this.subscriptions = this.subscriptions.filter(sub => sub.id !== subscription.id);
     }
 
-    removeTransactionLog(transactionLog: TransactionLog): void {
-        this.transactionLogs = this.transactionLogs.filter(tl => tl.id !== transactionLog.id);
-    }
-
     updateAccount(account: Account): void {
         const index = this.accounts.findIndex(acc => acc.id === account.id);
         this.accounts[index] = account;
@@ -240,11 +316,6 @@ export class AccountingDatabase {
         this.subscriptions[index] = subscription;
     }
 
-    updateTransactionLog(transactionLog: TransactionLog): void {
-        const index = this.transactionLogs.findIndex(tl => tl.id === transactionLog.id);
-        this.transactionLogs[index] = transactionLog;
-    }
-
     get Accounts(): Account[] {
         return this.accounts;
     }
@@ -257,45 +328,11 @@ export class AccountingDatabase {
         return this.subscriptions;
     }
 
-    get TransactionLogs(): TransactionLog[] {
-        return this.transactionLogs;
-    }
-
     get AccountingData(): IAccountingData {
         return {
             agents: this.agents.map(agent => agent.export()),
             accounts: this.accounts.map(account => account.export()),
-            subscriptions: this.subscriptions.map(subscription => subscription.export()),
-            transactionLogs: this.transactionLogs.map(transactionLog => transactionLog.export())
+            subscriptions: this.subscriptions.map(subscription => subscription.export())
         };
     }
-
-    QueryTransactionLogs(query: ITransactionLogQuery): TransactionLog[] {
-
-        let transactionLogs = this.transactionLogs;
-
-        if (query.account !== undefined) {
-            transactionLogs = transactionLogs.filter(transactionLog => transactionLog.account.id === query.account.id);
-        }
-
-        if (query.agent) {
-            transactionLogs = transactionLogs.filter(transactionLog => transactionLog.agent.id === query.agent.id);
-        }
-
-        if (query.subscription) {
-            transactionLogs = transactionLogs.filter(transactionLog => transactionLog.subscription?.id === query.subscription.id);
-        }
-
-        if (query.dateFrom) {
-            transactionLogs = transactionLogs.filter(transactionLog => transactionLog.date >= query.dateFrom);
-        }
-
-        if (query.dateTo) {
-            transactionLogs = transactionLogs.filter(transactionLog => transactionLog.date <= query.dateTo);
-        }
-
-        return transactionLogs;
-
-    }
-
 }
