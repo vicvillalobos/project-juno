@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import CardChart from "@/components/dashboard/CardChart.vue";
+// import CardChart from "@/components/dashboard/CardChart.vue";
 import CardIndicator from "@/components/dashboard/CardIndicator.vue";
 import { moneyValueFormatter } from "@/utils/formatters";
 // State
@@ -9,8 +9,8 @@ const activeName = ref("first");
 const numbers = ref({
   income: Math.random() * 3000000,
   expenses: Math.floor(Math.random() * 20) * 100000,
-  balance: 0
-})
+  balance: 0,
+});
 
 numbers.value.balance = numbers.value.income - numbers.value.expenses;
 
@@ -45,8 +45,7 @@ const handleClick = (tab: any, event: any) => {
 <template>
   <main>
     <el-row class="vertical-spacing" :gutter="20">
-      <el-col>
-      </el-col>
+      <el-col> </el-col>
     </el-row>
     <el-row :gutter="20">
       <el-col :span="8" v-for="i in indicators">

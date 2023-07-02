@@ -3,6 +3,8 @@ import type {
     IAccountingSubscription, IAccountingTransactionLog, ETransactionType as ETransactionType, IAccountingData, ITransactionLogQuery
 } from "./interfaces/accounting";
 
+import { hashData, uuid } from "../utils/data";
+
 abstract class Exportable {
     abstract export(): any;
 }
@@ -182,9 +184,9 @@ export class TransactionLog extends Exportable {
     agent: Agent;
     subscription?: Subscription;
 
-    constructor(id: string, description: string | undefined, date: Date, account: Account, amount: number, type: ETransactionType, agent: Agent, subscription?: Subscription) {
+    constructor(description: string | undefined, date: Date, account: Account, amount: number, type: ETransactionType, agent: Agent, subscription?: Subscription) {
         super();
-        this.id = id;
+        this.id = new uuid();
         this.description = description;
         this.date = date;
         this.account = account;
@@ -216,6 +218,8 @@ export class AccountingDatabase {
     subscriptions: Subscription[];
     transactionLogs: TransactionLog[];
 
+    saved: boolean = false;
+
     constructor() {
         this.agents = [];
         this.accounts = [];
@@ -243,10 +247,21 @@ export class AccountingDatabase {
         this.accounts = parsedData.accounts.map((account: IAccountingAccount) => new Account(account.id, account.name));
         this.subscriptions = parsedData.subscriptions.map((subscription: IAccountingSubscription) => new Subscription(subscription.id, subscription.name, this.getAccountById(subscription.account.id), this.getAgentById(subscription.agent.id), subscription.dueDate, subscription.dueType, subscription.lastPaymentDate));
         this.transactionLogs = parsedData.transactionLogs.map((transactionLog: IAccountingTransactionLog) => new TransactionLog(transactionLog.id, transactionLog.description, transactionLog.date, this.getAccountById(transactionLog.account.id), transactionLog.amount, transactionLog.type, this.getAgentById(transactionLog.agent.id), transactionLog.subscription ? this.getSubscriptionById(transactionLog.subscription.id) : undefined));
+
+        this.saved = true;
     }
 
     save(): void {
         localStorage.setItem("accounting", this.serialize());
+        this.saved = true;
+    }
+
+    get IsDataSaved(): boolean {
+        const accounting = localStorage.getItem("accounting");
+        
+        // get a hash of the saved data and compare it to the current data hash.
+        // if they are the same, then the data is saved.
+        return accounting ? hashData(accounting) === hashData(this.serialize()) : false;
     }
 
     static load(): AccountingDatabase {

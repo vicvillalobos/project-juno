@@ -6,7 +6,7 @@ import { AccountingDatabase } from '@/models/accounting'
 
 export const useBalanceStore = defineStore('balance', () => {
 
-    const db = reactive(new AccountingDatabase());
+    const db = reactive(AccountingDatabase.load());
 
     return { db }
 

@@ -3,7 +3,10 @@ import { createRouter, createWebHistory } from 'vue-router'
 import WindowLayout from '../layout/WindowLayout.vue'
 
 import HomeView from '../views/HomeView.vue'
-import AccountingView from '../views/AccountingView.vue'
+
+import AccountingLayout from '../views/accounting/AccountingLayout.vue'
+import AccountingHomeView from '../views/accounting/HomeView.vue'
+import AccountingAccountsView from '../views/accounting/AccountsView.vue'
 import AboutView from '../views/AboutView.vue'
 
 
@@ -21,8 +24,19 @@ const router = createRouter({
           component: HomeView
         }, {
           path: 'accounting',
-          name: 'accounting',
-          component: AccountingView
+          component: AccountingLayout,
+          children: [
+            {
+              path: '',
+              name: 'accounting',
+              component: AccountingHomeView
+            },
+            {
+              path: 'accounts',
+              name: 'accounts',
+              component: AccountingAccountsView
+            }
+          ]
         },
         {
           path: 'about',

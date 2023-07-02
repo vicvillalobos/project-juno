@@ -1,5 +1,6 @@
 :root,
 html.dark {
+  --app-color-background-lighter: #212224;
   --app-color-background: #1d1f22;
   --app-color-background-dark: #18191c;
   --app-color-background-darker: #0c0d0f;
